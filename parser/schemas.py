@@ -14,7 +14,7 @@ class BaseLegalObject(BaseModel):
 
     document_type: str
     document_number: str
-    document_year: str
+    document_year: int
 
     document_title: str
 
