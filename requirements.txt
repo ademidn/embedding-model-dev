@@ -1,0 +1,29 @@
+# PDF Processing
+pymupdf>=1.26,<1.27
+
+# Data Processing
+pandas>=2.2,<2.4
+numpy>=1.26,<3.0
+
+# Schema Validation
+pydantic>=2.10,<3.0
+
+# Text Processing
+regex>=2024.11
+
+# Utilities
+tqdm>=4.66
+jsonlines>=4.0
+python-dotenv>=1.0
+tabulate>=0.9
+loguru>=0.7
+
+# CLI
+typer>=0.12
+
+# Table Processing (future attachment parsing)
+openpyxl>=3.1
+
+# Development
+jupyterlab>=4.4
+ipykernel>=6.30
