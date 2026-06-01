@@ -14,7 +14,7 @@ class BaseLegalObject(BaseModel):
 
     document_type: str
     document_number: str
-    document_year: int
+    document_year: int = Field(ge=1945, le=2100)
 
     document_title: str
 
