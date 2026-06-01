@@ -18,7 +18,7 @@ class BaseLegalObject(BaseModel):
 
     document_title: str
 
-    source_page: List[int] = Field(default_factory=list)
+    source_pages: List[int] = Field(default_factory=list)
 
     topic_tags: List[str] = Field(default_factory=list)
 
