@@ -12,7 +12,7 @@ class LegalParser:
     )
 
     ARTICLE_PATTERN = re.compile(
-        r"^Pasal\s+(\d+[A-Z]?)\s*$",
+        r"^Pasal[ \t]+(\d+[A-Z]?)\s*$",
         re.MULTILINE
     )
 
@@ -42,8 +42,8 @@ class LegalParser:
             f"{document_type.lower()}_{document_number}_{document_year}"
         )
 
-
     # Document Splitter
+
     def split_document(self, text: str):
 
         # Jika tidak ada bagian penjelasan
@@ -85,8 +85,8 @@ class LegalParser:
             "article_explanation": article_explanation,
         }
 
-
     # Chapter Extraction
+
     def extract_chapters(self, text: str):
 
         matches = list(self.CHAPTER_PATTERN.finditer(text))
@@ -130,8 +130,8 @@ class LegalParser:
 
         return chapters
     
-
     # Article Extraction
+
     def extract_articles(
             self,
             chapter_number: str,
@@ -187,8 +187,8 @@ class LegalParser:
         
         return articles
 
-
     # Body Parser
+
     def parse_body(self, body_text: str):
 
         chapters = self.extract_chapters(body_text)
@@ -209,6 +209,7 @@ class LegalParser:
         return articles
     
     # Main Parser
+
     def parse(self, text: str):
         split_result = self.split_document(text)
 
