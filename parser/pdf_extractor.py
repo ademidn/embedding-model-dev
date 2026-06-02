@@ -3,6 +3,7 @@ import fitz
 from loguru import logger
 from tqdm import tqdm
 
+
 class PDFExtractor:
 	def __init__(self, pdf_path: str):
 		self.pdf_path = Path(pdf_path)
@@ -55,8 +56,9 @@ class PDFExtractor:
 			f"Text saved to: {output_path}"
 		)
 
+
 if __name__ == "__main__":
-	extractor = PDFextractor(
+	extractor = PDFExtractor(
 		pdf_path="regulation/raw/pp/pp_22_2021_pplh.pdf"
 	)
 
