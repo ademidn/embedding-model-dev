@@ -12,6 +12,7 @@ class BaseLegalObject(BaseModel):
 
     object_type: str
 
+    document_id: Optional[str] = None
     document_type: str
     document_number: str
     document_year: int = Field(ge=1945, le=2100)
@@ -52,10 +53,16 @@ class Article(BaseLegalObject):
     paragraphs: List[Paragraph] = Field(default_factory=list)
 
 
-class Explenation(BaseLegalObject):
-    object_type: Literal["explanation"] = "explanation"
+class GeneralExplanation(BaseLegalObject):
+    object_type: Literal["general_explanation"] = ("general_explanation")
 
-    related_article: str
+    section_title: str
+
+
+class ArticleExplanation(BaseLegalObject):
+    object_type: Literal["article_explanation"] = ("article_explanation")
+
+    article_number: str
 
 
 class AttachmentNarrative(BaseLegalObject):
