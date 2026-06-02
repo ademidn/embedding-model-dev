@@ -1,18 +1,19 @@
-from typing import List, Optional, Literal
+from typing import List, Optional, Literal, Dict, Any
 from pydantic import BaseModel, Field
 
-
+# Shared Compoents ---
 class Paragraph(BaseModel):
     paragraph_number: str
     text: str
 
-
+# Base Object ---
 class BaseLegalObject(BaseModel):
     id: str
 
     object_type: str
 
     document_id: Optional[str] = None
+
     document_type: str
     document_number: str
     document_year: int = Field(ge=1945, le=2100)
@@ -26,9 +27,9 @@ class BaseLegalObject(BaseModel):
     embedding_text: str
     raw_text: str
 
-
+# Definitions ---
 class Definition(BaseLegalObject):
-    object_type: Literal["definition"] = "definition"
+    object_type: Literal["definition"] = ("definition")
 
     term: str
 
@@ -38,9 +39,9 @@ class Definition(BaseLegalObject):
     chapter_number: Optional[str] = None
     chapter_title: Optional[str] = None
 
-
+# Articles ---
 class Article(BaseLegalObject):
-    object_type: Literal["article"] = "article"
+    object_type: Literal["article"] = ("article")
 
     article_number: str
 
@@ -53,10 +54,11 @@ class Article(BaseLegalObject):
     paragraphs: List[Paragraph] = Field(default_factory=list)
 
 
+# Explanations ---
 class GeneralExplanation(BaseLegalObject):
     object_type: Literal["general_explanation"] = ("general_explanation")
 
-    section_title: str
+    section_title: str = "UMUM"
 
 
 class ArticleExplanation(BaseLegalObject):
@@ -65,6 +67,7 @@ class ArticleExplanation(BaseLegalObject):
     article_number: str
 
 
+# Attachments ---
 class AttachmentNarrative(BaseLegalObject):
     object_type: Literal["attachment_narrative"] = ("attachment_narrative")
 
@@ -79,7 +82,7 @@ class AttachmentTable(BaseLegalObject):
     attachment_title: str
 
     table_markdown: str
-    table_json: dict
+    table_json: Dict[str, Any]
 
 
 class AttachmentDiagram(BaseLegalObject):
