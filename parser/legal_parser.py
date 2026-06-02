@@ -6,6 +6,26 @@ from parser.schemas import Article
 
 class LegalParser:
 
+    CHAPTER_PATTERN = re.compile(
+        r"^BAB\s+([IVXLCDM]+)\s*$",
+        re.MULTILINE
+    )
+
+    ARTICLE_PATTERN = re.compile(
+        r"^Pasal\s+(\d+[A-Z]?)\s*$",
+        re.MULTILINE
+    )
+
+    GENERAL_EXPLANATION_PATTERN = re.compile(
+        r"PENJELASAN",
+        re.IGNORECASE
+    )
+
+    ARTICLE_EXPLANATION_PATTERN = re.compile(
+        r"II\.\s*PASAL\s+DEMI\s+PASAL",
+        re.IGNORECASE
+    )
+
     def __init__(
             self,
             document_type: str,
@@ -17,18 +37,56 @@ class LegalParser:
         self.document_number = document_number
         self.document_year = document_year
         self.document_title = document_title
-    
-    CHAPTER_PATTERN = re.compile(
-        r"^BAB\s+([IVXLCDM]+)\s*$",
-        re.MULTILINE
-    )
 
-    ARTICLE_PATTERN = re.compile(
-        r"^Pasal\s+(\d+[A-Z]?)\s*$",
-        re.MULTILINE
-    )
+        self.document_id = (
+            f"{document_type.lower()}_{document_number}_{document_year}"
+        )
 
 
+    # Document Splitter
+    def split_document(self, text: str):
+
+        # Jika tidak ada bagian penjelasan
+        general_match = (
+            self.GENERAL_EXPLANATION_PATTERN.search(text)
+        )
+
+        if not general_match:
+            return {
+                "body": text,
+                "general_explanation": None,
+                "article_explanation": None,
+            }
+        
+        # Jika hanya ada penjelasan umum
+        body_text = text[:general_match.start()].strip()
+
+        explanation_text = text[general_match.start():].strip()
+
+        article_match = (
+            self.ARTICLE_EXPLANATION_PATTERN.search(explanation_text)
+        )
+
+        if not article_match:
+            return {
+                "body": body_text,
+                "general_explanation": explanation_text,
+                "article_explanation": None,
+            }
+        
+        # Jika ada penjelasan umum dan pasal demi pasal
+        general_explanation = explanation_text[:article_match.start()].strip()
+
+        article_explanation = explanation_text[article_match.start():].strip()
+
+        return {
+            "body": body_text,
+                "general_explanation": general_explanation,
+                "article_explanation": article_explanation,
+        }
+
+
+    # Chapter Extraction
     def extract_chapters(self, text: str):
 
         matches = list(self.CHAPTER_PATTERN.finditer(text))
@@ -56,7 +114,7 @@ class LegalParser:
                 line = line.strip()
 
                 if (
-                    line 
+                    line
                     and not line.startswith("Pasal")
                 ):
                     chapter_title = line
@@ -73,6 +131,7 @@ class LegalParser:
         return chapters
     
 
+    # Article Extraction
     def extract_articles(
             self,
             chapter_number: str,
@@ -106,7 +165,9 @@ class LegalParser:
             """.strip()
 
             article = Article(
-                id=f"uu_32_2009_pplh_art_{article_number}",
+                id=f"{self.document_id}_art_{article_number}",
+
+                document_id=self.document_id,
 
                 document_type=self.document_type,
                 document_number=self.document_number,
@@ -127,9 +188,10 @@ class LegalParser:
         return articles
 
 
-    def parse(self, text: str):
+    # Body Parser
+    def parse_body(self, body_text: str):
 
-        chapters = self.extract_chapters(text)
+        chapters = self.extract_chapters(body_text)
 
         articles = []
 
@@ -144,6 +206,26 @@ class LegalParser:
 
             articles.extend(chapter_articles)
 
-        logger.info(f"Parsed {len(articles)} articles")
-
         return articles
+    
+    # Main Parser
+    def parse(self, text: str):
+        split_result = self.split_document(text)
+
+        body_text = split_result["body"]
+
+        general_explanation = split_result["general_explanation"]
+
+        article_explanation = split_result["article_explanation"]
+
+        articles = self.parse_body(body_text)
+
+        logger.info(f"Parsed {len(articles)} articles")
+        logger.info(f"General explanation found: {general_explanation is not None}")
+        logger.info(f"Article explanation found: {article_explanation is not None}")
+
+        return {
+            "articles": articles,
+            "general_explanation": general_explanation,
+            "article_explanation": article_explanation,
+        }
