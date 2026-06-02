@@ -81,8 +81,8 @@ class LegalParser:
 
         return {
             "body": body_text,
-                "general_explanation": general_explanation,
-                "article_explanation": article_explanation,
+            "general_explanation": general_explanation,
+            "article_explanation": article_explanation,
         }
 
 
