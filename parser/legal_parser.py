@@ -17,7 +17,7 @@ class LegalParser:
     )
 
     GENERAL_EXPLANATION_PATTERN = re.compile(
-        r"PENJELASAN",
+        r"PENJELASAN\s+ATAS",
         re.IGNORECASE
     )
 
