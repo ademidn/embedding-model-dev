@@ -83,6 +83,8 @@ class LegalParser:
             self.ARTICLE_PATTERN.finditer(chapter_content)
         )
 
+        articles = []
+
         for i, match in enumerate(matches):
             start = match.start()
 
