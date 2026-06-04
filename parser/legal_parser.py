@@ -1,7 +1,7 @@
 from pathlib import Path
 import re
 from loguru import logger
-from parser.schemas import Article
+from parser.schemas import Article, Definition
 
 
 class LegalParser:
@@ -14,6 +14,11 @@ class LegalParser:
     ARTICLE_PATTERN = re.compile(
         r"^Pasal[ \t]+(\d+[A-Z]?)\s*$",
         re.MULTILINE
+    )
+
+    DEFINITION_PATTERN = re.compile(
+        r"^(\d+)\.\s+(.+?)(?=\n\d+\.\s|\Z)",
+        re.MULTILINE | re.DOTALL
     )
 
     GENERAL_EXPLANATION_PATTERN = re.compile(
@@ -186,6 +191,79 @@ class LegalParser:
             articles.append(article)
         
         return articles
+    
+    # Definition Extraction (Pasal 1)
+
+    def extract_definitions(
+            self,
+            chapter_number: str,
+            chapter_title: str,
+            article_text: str,
+    ):
+        matches = list(
+            self.DEFINITION_PATTERN.finditer(article_text)
+        )
+
+        definitions = []
+
+        for match in matches:
+            definition_number = match.group(1)
+
+            raw = match.group(2).strip()
+
+            # Normalisasi
+            raw = re.sub(r"\n+", " ", raw).strip()
+
+            embedding_text = f"""
+            Dokumen: {self.document_title}
+            BAB {chapter_number}: {chapter_title}
+            Pasal 1 Ayat {definition_number}
+            {raw}
+            """.strip()
+
+            definition = Definition(
+                id=f"{self.document_id}_def_{definition_number}",
+
+                document_id=self.document_id,
+
+                document_type=self.document_type,
+                document_number=self.document_number,
+                document_year=self.document_year,
+                document_title=self.document_title,
+
+                term=self._extract_term(raw),
+                article_number="1",
+                definition_number=definition_number,
+
+                chapter_number=chapter_number,
+                chapter_title=chapter_title,
+
+                embedding_text=embedding_text,
+                raw_text=raw,
+            )
+
+            definitions.append(definition)
+
+        return definitions
+   
+
+    def _extract_term(self, definition_text: str) -> str:
+        """
+        Ekstrak term dari teks definisi.
+        Pola umum: "<Term> adalah ..." atau "<Term> merupakan ..."
+        """
+
+        match = re.match(
+            r"^(.+?)\s+(?:adalah|merupakan|yaitu|ialah)\b",
+            definition_text,
+            re.IGNORECASE
+        )
+
+        if match:
+            return match.group(1).strip()
+      
+        fallback = re.split(r"[,.]", definition_text, maxsplit=1)
+        return fallback[0].strip()
 
     # Body Parser
 
@@ -194,19 +272,27 @@ class LegalParser:
         chapters = self.extract_chapters(body_text)
 
         articles = []
+        definitions = []
 
         for chapter in chapters:
-            chapter_articles = (
-                self.extract_articles(
+            chapter_articles = self.extract_articles(
                     chapter_number=chapter["number"],
                     chapter_title=chapter["title"],
                     chapter_content=chapter["content"],
-                )
             )
 
-            articles.extend(chapter_articles)
+            for article in chapter_articles:
+                if article.article_number == "1":
+                    chapter_definitions = self.extract_definitions(
+                        chapter_number=chapter["number"],
+                        chapter_title=chapter["title"],
+                        article_text=article.raw_text,
+                    )
+                    definitions.extend(chapter_definitions)
+                else:
+                    articles.append(article)
 
-        return articles
+        return articles, definitions
     
     # Main Parser
 
@@ -219,14 +305,16 @@ class LegalParser:
 
         article_explanation = split_result["article_explanation"]
 
-        articles = self.parse_body(body_text)
+        articles, definitions = self.parse_body(body_text)
 
         logger.info(f"Parsed {len(articles)} articles")
+        logger.info(f"Parsed {len(definitions)} definitions")
         logger.info(f"General explanation found: {general_explanation is not None}")
         logger.info(f"Article explanation found: {article_explanation is not None}")
 
         return {
             "articles": articles,
+            "definitions": definitions,
             "general_explanation": general_explanation,
             "article_explanation": article_explanation,
         }

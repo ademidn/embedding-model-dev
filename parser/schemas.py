@@ -28,6 +28,7 @@ class BaseLegalObject(BaseModel):
     raw_text: str
 
 # Definitions ---
+
 class Definition(BaseLegalObject):
     object_type: Literal["definition"] = ("definition")
 
@@ -40,6 +41,7 @@ class Definition(BaseLegalObject):
     chapter_title: Optional[str] = None
 
 # Articles ---
+
 class Article(BaseLegalObject):
     object_type: Literal["article"] = ("article")
 
