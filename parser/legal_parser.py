@@ -1,7 +1,7 @@
 from pathlib import Path
 import re
 from loguru import logger
-from parser.schemas import Article, Definition
+from parser.schemas import Article, Definition, GeneralExplanation, ArticleExplanation
 
 
 class LegalParser:
@@ -294,6 +294,79 @@ class LegalParser:
 
         return articles, definitions
     
+    # General Explanation Parser
+    
+    def parse_general_explanation(self, text: str):
+        
+        embedding_text = f"""
+        Dokumen: {self.document_title}
+        Penjelasan Umum
+        {text}
+        """.strip()
+
+        return GeneralExplanation(
+            id=f"{self.document_id}_gen_exp",
+
+            document_id=self.document_id,
+
+            document_type=self.document_type,
+            document_number=self.document_number,
+            document_year=self.document_year,
+            document_title=self.document_title,
+
+            embedding_text=embedding_text,
+            raw_text=text,
+        )
+    
+    # Article Explanation Parser
+    
+    def parse_article_explanation(self, text: str):
+        
+        matches = list(
+            self.ARTICLE_PATTERN.finditer(text)
+        )
+
+        explanations = []
+
+        for i, match in enumerate(matches):
+            start = match.start()
+
+            end = (
+                matches[i + 1].start
+                if i < len(matches) - 1
+                else len(text)
+            )
+
+            article_number = match.group(1)
+
+            raw_text = text[start:end].strip()
+
+            embedding_text = f"""
+            Dokumen: {self.document_title}
+            Penjelasan Pasal {article_number}
+            {raw_text}
+            """.strip()
+
+            explanation = ArticleExplanation(
+                id=f"{self.document_id}_exp_art_{article_number}",
+
+                document_id=self.document_id,
+
+                document_type=self.document_type,
+                document_number=self.document_number,
+                document_year=self.document_year,
+                document_title=self.document_title,
+
+                article_number=article_number,
+
+                embedding_text=embedding_text,
+                raw_text=raw_text,
+            )
+
+            explanations.append(explanation)
+
+        return explanations
+
     # Main Parser
 
     def parse(self, text: str):
@@ -307,14 +380,25 @@ class LegalParser:
 
         articles, definitions = self.parse_body(body_text)
 
+        general_explanations = (
+            self.parse_general_explanation(general_explanation)
+            if general_explanation else None
+        )
+
+        article_explanations = (
+            self.parse_article_explanation(article_explanation)
+            if article_explanation else []
+        )
+
         logger.info(f"Parsed {len(articles)} articles")
         logger.info(f"Parsed {len(definitions)} definitions")
         logger.info(f"General explanation found: {general_explanation is not None}")
         logger.info(f"Article explanation found: {article_explanation is not None}")
+        logger.info(f"Parsed {len(article_explanations)} article explanations")
 
         return {
             "articles": articles,
             "definitions": definitions,
-            "general_explanation": general_explanation,
-            "article_explanation": article_explanation,
+            "general_explanation": general_explanations,
+            "article_explanation": article_explanations,
         }
