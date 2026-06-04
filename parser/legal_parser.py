@@ -332,7 +332,7 @@ class LegalParser:
             start = match.start()
 
             end = (
-                matches[i + 1].start
+                matches[i + 1].start()
                 if i < len(matches) - 1
                 else len(text)
             )
