@@ -16,7 +16,7 @@ class PDFExtractor:
 	# Page preview detection
 	# Block di pojok kanan bawah dianggap page preview dan dibuang
 	# Threshold berbasis ratio halaman digunakan agar tidak tergantung ukuran PDF:
-	# - x_ratio > 0.65: area kanan 
+	# - x_ratio > 0.55: area kanan 
 	# - y_ratio > 0.85: area bawah
 	# Kedua kondisi harus terpenuhi sekaligus agar bisa dibuang
 	
@@ -30,7 +30,7 @@ class PDFExtractor:
 		x_ratio = x0 / page_width
 		y_ratio = y0 / page_height
 
-		return x_ratio > 0.65 and y_ratio > 0.85
+		return x_ratio > 0.55 and y_ratio > 0.85
 
 	def extract_text(self) -> str:
 		"""
