@@ -320,7 +320,7 @@ class LegalParser:
     
     # Article Explanation Parser
     
-    def parse_article_explanation(self, text: str):
+    def parse_article_explanations(self, text: str):
         
         matches = list(
             self.ARTICLE_PATTERN.finditer(text)
@@ -386,19 +386,19 @@ class LegalParser:
         )
 
         article_explanations = (
-            self.parse_article_explanation(article_explanation)
+            self.parse_article_explanations(article_explanation)
             if article_explanation else []
         )
 
         logger.info(f"Parsed {len(articles)} articles")
         logger.info(f"Parsed {len(definitions)} definitions")
-        logger.info(f"General explanation found: {general_explanation is not None}")
-        logger.info(f"Article explanation found: {article_explanation is not None}")
+        logger.info(f"General explanation found: {general_explanations is not None}")
+        logger.info(f"Article explanation found: {len(article_explanations) > 0}")
         logger.info(f"Parsed {len(article_explanations)} article explanations")
 
         return {
             "articles": articles,
             "definitions": definitions,
-            "general_explanation": general_explanations,
-            "article_explanation": article_explanations,
+            "general_explanations": general_explanations,
+            "article_explanations": article_explanations,
         }
